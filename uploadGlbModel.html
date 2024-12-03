@@ -1,0 +1,90 @@
+<html>
+	<head>
+		<!-- <script src="https://ajax.googleapis.com/ajax/libs/threejs/r84/three.min.js"></script> -->
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+		<!-- <script type="text/javascript" src="src/OBJLoader.js"></script> -->
+	</head>
+	<body>
+		<div id="WebGL-output" width="window.innerWidth" height="window.innerHeight"></div>
+		<!-- <script type="text/javascript"> -->
+
+		<script type="importmap">
+		{
+			"imports": {
+				"three": "./three.js-master/build/three.module.js",
+				"GLTFLoader": "./three.js-master/build/GLTFLoader.js",
+				"RectAreaLightUniformsLib": "./three.js-master/build/RectAreaLightUniformsLib.js",
+				"OrbitControls": "./three.js-master/build/OrbitControls.js"
+			}
+		}
+		</script>	
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import {GLTFLoader} from 'GLTFLoader';
+			import {OrbitControls} from 'OrbitControls';
+			import {RectAreaLightUniformsLib} from 'RectAreaLightUniformsLib';
+
+			$(function () {
+				//SCENE AND CAMERA
+				var scene = new THREE.Scene();
+				var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 3000);
+				camera.position.set(1,4,5);
+
+				//RENDERER
+				var renderer = new THREE.WebGLRenderer();
+				renderer.setClearColor(new THREE.Color(0xEEEEEE));
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap
+				renderer.setPixelRatio(Math.min(window.devicePixelRatio, 100))
+
+				//OBJECT
+				const loader = new GLTFLoader();
+				loader.load('./model/apple.glb', gltf => {
+					scene.add( gltf.scene );
+				}, 
+				undefined, 
+				function ( error ) {console.error( error );} );
+				
+				//ORBIT CONTROLS
+				const controls = new OrbitControls(camera, renderer.domElement);
+				controls.autoRotate = true;
+				controls.autoRotateSpeed = 5;
+				controls.enableDamping = true;
+
+				//LIGHT
+				RectAreaLightUniformsLib.init();
+				{
+					const rectLight = new THREE.RectAreaLight(0xFFFFFF, 1, 300, 300);
+					rectLight.position.set(-30, -10, -10);
+					rectLight.rotation.y = -Math.PI/4;
+					scene.add(rectLight);
+				}
+				
+				{
+					const rectLight = new THREE.RectAreaLight(0xFFFACD, 1, 100, 100);
+					rectLight.position.set(10, 0, 0);
+					rectLight.rotation.y = Math.PI - Math.PI/4;
+					scene.add(rectLight);
+				}
+
+				//add the output of the renderer to the html element
+				$("#WebGL-output").append(renderer.domElement);
+				renderer.render(scene, camera);
+
+
+				//call the render function
+				render();
+
+				function render() {
+					// render using requestanimationframe
+					requestAnimationFrame(render);
+					controls.update();
+					renderer.render(scene, camera);
+				}				
+			})		
+		</script>
+	</body>
+</html>
